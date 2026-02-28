@@ -1,0 +1,36 @@
+﻿@page {
+  margin: 16mm;
+}
+
+body {
+  background: #ffffff;
+  color: #000000;
+  font-family: "Times New Roman", "Noto Serif SC", "Songti SC", serif;
+}
+
+.site-header,
+.hero,
+.scroll-progress,
+.hero-canvas,
+.footer-links,
+.btn,
+.nav,
+.cta {
+  display: none !important;
+}
+
+.section {
+  padding: 12px 0 !important;
+}
+
+.card,
+.abstract-card,
+.method-item,
+.demo-text {
+  box-shadow: none !important;
+  border: 1px solid #cccccc !important;
+}
+
+.reference-list {
+  padding-left: 18px;
+}

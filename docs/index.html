@@ -9,14 +9,19 @@
       content="多 Agent + RAG + 动态记忆 + 一致性检查的长文本生成系统，面向长篇小说与复杂叙事。"
     />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="print.css" media="print" />
+    <script defer src="app.js"></script>
   </head>
   <body>
+    <div class="scroll-progress" aria-hidden="true"></div>
     <header class="site-header">
       <div class="container header-inner">
         <div class="brand">Long-Story Agent</div>
         <nav class="nav">
           <a href="#abstract">摘要</a>
+          <a href="#highlights">亮点</a>
           <a href="#contributions">贡献</a>
+          <a href="#components">组件</a>
           <a href="#method">方法</a>
           <a href="#architecture">架构</a>
           <a href="#results">结果</a>
@@ -36,6 +41,7 @@
 
     <main>
       <section class="hero" id="top">
+        <canvas id="hero-canvas" class="hero-canvas" aria-hidden="true"></canvas>
         <div class="container hero-grid">
           <div class="hero-copy">
             <p class="eyebrow">Open Source · Multi-Agent · RAG</p>
@@ -110,6 +116,26 @@
         </div>
       </section>
 
+      <section class="section alt" id="highlights">
+        <div class="container">
+          <h2>研究亮点</h2>
+          <div class="highlight-list reveal">
+            <div>
+              <h3>可控长文本生成</h3>
+              <p>将叙事规划、检索增强与一致性评估组合为可重复的生成流程。</p>
+            </div>
+            <div>
+              <h3>闭环评估驱动</h3>
+              <p>以自动评估与转折点追踪作为修订触发器，减少剧情漂移。</p>
+            </div>
+            <div>
+              <h3>工程化可复现</h3>
+              <p>保留章节输出、轮次日志与配置记录，便于复盘与对比实验。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="section" id="contributions">
         <div class="container">
           <h2>主要贡献</h2>
@@ -125,6 +151,38 @@
             <div class="card reveal">
               <h3>可复现的生成流程</h3>
               <p>记录大纲、轮次摘要、评估得分与输出文本，便于对比实验与追溯。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="components">
+        <div class="container">
+          <h2>系统组件</h2>
+          <div class="component-grid">
+            <div class="card reveal">
+              <h3>规划层</h3>
+              <p>Analyzer + Organizer 生成任务分析与章节计划，提供全局控制。</p>
+            </div>
+            <div class="card reveal">
+              <h3>生成层</h3>
+              <p>Writer + Plot/Character/World Agents 生成文本与叙事结构。</p>
+            </div>
+            <div class="card reveal">
+              <h3>检索层</h3>
+              <p>Retriever + Static KB 组织知识注入与外部语义支撑。</p>
+            </div>
+            <div class="card reveal">
+              <h3>记忆层</h3>
+              <p>Memory System 记录章节摘要、角色卡与关键情节。</p>
+            </div>
+            <div class="card reveal">
+              <h3>评估层</h3>
+              <p>Evaluator + Consistency Checker 监测一致性与质量波动。</p>
+            </div>
+            <div class="card reveal">
+              <h3>修订层</h3>
+              <p>Realtime Editor 根据评估反馈进行局部修订与回写。</p>
             </div>
           </div>
         </div>
@@ -300,6 +358,20 @@ set CODEX_API_KEY=your_key</code></pre>
           </div>
           <div class="note">
             <strong>提示：</strong>可在 <code>.env</code> 中设置环境变量；更多参数见下方配置表。
+          </div>
+          <div class="grid reproducibility">
+            <div class="card reveal">
+              <h3>推荐环境</h3>
+              <p>Python 3.11 + Windows/Linux，确保 GPU 资源与 API 配额充足。</p>
+            </div>
+            <div class="card reveal">
+              <h3>实验记录</h3>
+              <p>输出日志位于 <code>runs/</code>，包含章节文本与评估摘要。</p>
+            </div>
+            <div class="card reveal">
+              <h3>配置追踪</h3>
+              <p>核心参数集中在 <code>config.py</code> 与 <code>config.toml</code>。</p>
+            </div>
           </div>
         </div>
       </section>
@@ -503,18 +575,5 @@ git push</code></pre>
         </div>
       </div>
     </footer>
-    <script>
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("in-view");
-            }
-          });
-        },
-        { threshold: 0.2 }
-      );
-      document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-    </script>
   </body>
 </html>
