@@ -1,0 +1,296 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="title" content="Long-Story Agent - Collaborative RAG-Agent for Long-form Generation">
+  <meta name="description" content="Long-Story Agent is a collaborative multi-agent RAG workflow for controllable long-form narrative generation with dynamic memory and automatic consistency evaluation.">
+  <meta name="keywords" content="long-form generation, RAG, multi-agent, narrative generation, consistency evaluation, dynamic memory">
+  <meta name="author" content="xiao-zi-chen">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Long-Story Agent">
+  <meta property="og:title" content="Long-Story Agent">
+  <meta property="og:description" content="A collaborative RAG-agent system for controllable long-form narrative generation.">
+  <meta property="og:url" content="https://xiao-zi-chen.github.io/Long-Story-agent/">
+  <meta property="og:image" content="https://xiao-zi-chen.github.io/Long-Story-agent/workflow.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Long-Story Agent">
+  <meta name="twitter:description" content="Collaborative RAG-agent workflow for long-form generation.">
+  <meta name="twitter:image" content="https://xiao-zi-chen.github.io/Long-Story-agent/workflow.png">
+
+  <meta name="theme-color" content="#2563eb">
+
+  <title>Long-Story Agent | Academic Project Page</title>
+
+  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <link rel="stylesheet" href="print.css" media="print">
+
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <main id="main-content">
+    <section class="hero publication-header">
+      <div class="hero-body">
+        <div class="container is-max-desktop">
+          <div class="columns is-centered">
+            <div class="column has-text-centered">
+              <h1 class="title is-1 publication-title">Long-Story Agent</h1>
+              <p class="subtitle is-4 publication-subtitle">Collaborative RAG-Agent for Long-form Narrative Generation</p>
+
+              <div class="is-size-5 publication-authors">
+                <span class="author-block">
+                  <a href="https://github.com/xiao-zi-chen" target="_blank" rel="noopener noreferrer">xiao-zi-chen</a>
+                </span>
+              </div>
+
+              <div class="is-size-5 publication-authors">
+                <span class="author-block">Independent Research</span>
+                <span class="author-block">2026</span>
+              </div>
+
+              <div class="column has-text-centered publication-links-wrap">
+                <div class="publication-links">
+                  <span class="link-block">
+                    <a href="https://github.com/xiao-zi-chen/Long-Story-agent" target="_blank" rel="noopener noreferrer" class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon"><i class="fab fa-github"></i></span>
+                      <span>Code</span>
+                    </a>
+                  </span>
+                  <span class="link-block">
+                    <a href="#workflow" class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon"><i class="fas fa-project-diagram"></i></span>
+                      <span>Workflow</span>
+                    </a>
+                  </span>
+                  <span class="link-block">
+                    <a href="#evaluation" class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon"><i class="fas fa-chart-line"></i></span>
+                      <span>Evaluation</span>
+                    </a>
+                  </span>
+                  <span class="link-block">
+                    <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
+                      <span class="icon"><i class="fas fa-quote-right"></i></span>
+                      <span>BibTeX</span>
+                    </a>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hero teaser" id="workflow">
+      <div class="container is-max-desktop">
+        <div class="hero-body">
+          <img src="workflow.png" alt="Long-Story Agent workflow" class="center-image blend-img-background" loading="lazy" />
+          <p class="teaser-text">
+            Long-Story Agent organizes narrative generation as a closed loop: task analysis, global and chapter-level planning,
+            multi-agent writing, retrieval augmentation, consistency checking, and iterative revision with dynamic memory write-back.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section hero is-light" id="abstract">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered has-text-centered">
+          <div class="column is-four-fifths">
+            <h2 class="title is-3">Abstract</h2>
+            <div class="content has-text-justified">
+              <p>
+                Long-form generation often suffers from structural drift, character inconsistency, and topic deviation.
+                We present Long-Story Agent, a collaborative RAG-agent system that modularizes planning, writing, retrieval,
+                memory, evaluation, and revision. The system maintains a closed-loop process in which chapter summaries,
+                consistency signals, and revision feedback are continuously written back to memory for the next iteration.
+                This design improves controllability and traceability for long narrative generation while keeping the
+                workflow reproducible through explicit run logs and configuration files.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section hero is-small" id="method">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column is-full">
+            <div class="content">
+              <h2 class="title is-3">Method</h2>
+              <div class="method-grid">
+                <article class="method-card">
+                  <h3>1. Planning Layer</h3>
+                  <p>Analyzer and Organizer transform prompts into global constraints and chapter-level execution plans.</p>
+                </article>
+                <article class="method-card">
+                  <h3>2. Generation Layer</h3>
+                  <p>Writer cooperates with Plot, Character, and World agents to draft coherent chapter content.</p>
+                </article>
+                <article class="method-card">
+                  <h3>3. Retrieval and Memory</h3>
+                  <p>Retriever and static knowledge modules inject context, while memory stores narrative state updates.</p>
+                </article>
+                <article class="method-card">
+                  <h3>4. Evaluation and Revision</h3>
+                  <p>Evaluator and consistency checker detect drift, and Realtime Editor applies targeted corrections.</p>
+                </article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section hero is-small is-light" id="evaluation">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column is-full">
+            <div class="content">
+              <h2 class="title is-3">Automatic Evaluation and Correction</h2>
+              <img src="auto-eval.png" alt="Automatic evaluation module" class="center-image blend-img-background narrow-image" loading="lazy" />
+              <p>
+                Automatic scoring tracks coherence, emotional progression, and overall quality over iterations.
+                The consistency checker records contradiction points and writes structured feedback to the revision stage,
+                enabling the next generation cycle to address high-priority narrative issues.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section hero is-small" id="results">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column is-full">
+            <div class="content">
+              <h2 class="title is-3">Sample Results</h2>
+              <p>
+                The repository already includes runnable traces showing the full closed-loop process. One sample run
+                is summarized below.
+              </p>
+              <div class="table-container">
+                <table class="table is-fullwidth is-striped is-hoverable result-table">
+                  <thead>
+                    <tr>
+                      <th>Metric</th>
+                      <th>Value</th>
+                      <th>Source</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Target length</td>
+                      <td>20,000 words</td>
+                      <td>Task config</td>
+                    </tr>
+                    <tr>
+                      <td>Generated length</td>
+                      <td>13,790 words</td>
+                      <td>runs/20260118_112833</td>
+                    </tr>
+                    <tr>
+                      <td>Iterations</td>
+                      <td>8</td>
+                      <td>runs/20260118_112833</td>
+                    </tr>
+                    <tr>
+                      <td>Best reward</td>
+                      <td>0.795</td>
+                      <td>runs/20260118_112833</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section hero is-small is-light" id="quickstart">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column is-full">
+            <div class="content">
+              <h2 class="title is-3">Quick Start</h2>
+              <div class="quickstart-grid">
+                <article class="quick-card">
+                  <h3>Install</h3>
+                  <pre><code>pip install -r requirements.txt</code></pre>
+                </article>
+                <article class="quick-card">
+                  <h3>Set API Keys</h3>
+                  <pre><code>set DEEPSEEK_API_KEY=your_key
+# or
+set OPENAI_API_KEY=your_key
+set CODEX_API_KEY=your_key</code></pre>
+                </article>
+                <article class="quick-card">
+                  <h3>Run</h3>
+                  <pre><code>python main.py</code></pre>
+                </article>
+              </div>
+              <p>Logs and generated artifacts are stored in <code>runs/</code>. Core configuration lives in <code>config.py</code> and <code>config.toml</code>.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="BibTeX">
+      <div class="container is-max-desktop content">
+        <div class="bibtex-header">
+          <h2 class="title">BibTeX</h2>
+          <button class="copy-bibtex-btn" type="button" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+            <i class="fas fa-copy"></i>
+            <span class="copy-text">Copy</span>
+          </button>
+        </div>
+        <pre id="bibtex-code"><code>@misc{longstoryagent2026,
+  title        = {Long-Story Agent: Collaborative RAG-Agent for Long-form Generation},
+  author       = {xiao-zi-chen},
+  year         = {2026},
+  howpublished = {\url{https://github.com/xiao-zi-chen/Long-Story-agent}},
+  note         = {Open-source project}
+}</code></pre>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="container">
+        <div class="columns is-centered">
+          <div class="column is-8">
+            <div class="content">
+              <p>
+                This page is adapted from the
+                <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener noreferrer">Academic Project Page Template</a>
+                (originating from the
+                <a href="https://nerfies.github.io" target="_blank" rel="noopener noreferrer">Nerfies</a>
+                project page).
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

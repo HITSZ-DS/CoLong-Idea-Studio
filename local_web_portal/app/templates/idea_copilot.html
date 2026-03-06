@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}Idea Copilot #{{ session_data.id }} | Long Story Portal{% endblock %}
+{% block content %}
+<section class="hero compact">
+  <h1>Idea Copilot Session #{{ session_data.id }}</h1>
+  <p class="muted">
+    Provider: {{ provider_label }} |
+    Status: <span class="pill pill-{{ session_data.status }}">{{ session_data.status }}</span> |
+    Rounds: {{ session_data.round_count }} |
+    Readiness: {{ session_data.readiness_score }}%
+  </p>
+</section>
+
+{% if message %}
+<div class="alert alert-ok">{{ message }}</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<section class="grid two-col">
+  <article class="card">
+    <h2>Original Idea</h2>
+    <pre class="idea-block">{{ session_data.original_idea }}</pre>
+    <h2 style="margin-top: 1rem;">Current Refined Idea</h2>
+    <pre class="idea-block">{{ session_data.refined_idea if session_data.refined_idea else session_state.refined_idea }}</pre>
+    <p class="muted">Updated: {{ session_data.updated_at.strftime("%Y-%m-%d %H:%M:%S") }}</p>
+  </article>
+
+  <article class="card">
+    <h2>Latest Copilot Output</h2>
+    <p class="muted">Analysis</p>
+    <pre class="idea-block">{{ latest_turn.analysis }}</pre>
+    <p class="muted">Suggested Questions</p>
+    {% if latest_turn.questions %}
+    <ol>
+      {% for q in latest_turn.questions %}
+      <li>{{ q }}</li>
+      {% endfor %}
+    </ol>
+    {% else %}
+    <p class="muted">No pending question in this turn.</p>
+    {% endif %}
+    <p class="muted">Ready Hint: {{ latest_turn.ready_hint }}</p>
+
+    {% if session_data.status == "active" %}
+    <form method="post" action="/idea-copilot/{{ session_data.id }}/reply" class="form-stack" style="margin-top: 1rem;">
+      <label>Your reply for this round</label>
+      <textarea name="reply" rows="6" required placeholder="Answer the questions, add constraints, or adjust style/chapter goals..."></textarea>
+      <button type="submit" class="btn btn-outline">Submit and continue refinement</button>
+    </form>
+
+    <form method="post" action="/idea-copilot/{{ session_data.id }}/confirm" class="form-stack" style="margin-top: 0.75rem;">
+      <button type="submit" class="btn btn-primary">I confirm, start generation now</button>
+    </form>
+
+    <form method="post" action="/idea-copilot/{{ session_data.id }}/cancel" class="form-stack" style="margin-top: 0.5rem;" onsubmit="return confirm('Cancel this copilot session?');">
+      <button type="submit" class="btn btn-outline btn-xs">Cancel this session</button>
+    </form>
+    {% else %}
+    <p class="muted">This session is not active.</p>
+    {% if session_data.final_job_id %}
+    <p><a class="btn btn-primary" href="/jobs/{{ session_data.final_job_id }}">Open generated job #{{ session_data.final_job_id }}</a></p>
+    {% endif %}
+    {% endif %}
+  </article>
+</section>
+
+<section class="card">
+  <h2>Conversation History</h2>
+  {% if messages %}
+    {% for msg in messages %}
+      {% if msg.role == "assistant" %}
+      <div class="chat-bubble chat-assistant">
+        <p><strong>Copilot</strong> · readiness {{ msg.readiness }}%</p>
+        <p>{{ msg.analysis }}</p>
+        {% if msg.questions %}
+        <ul>
+          {% for q in msg.questions %}
+          <li>{{ q }}</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% elif msg.role == "user" %}
+      <div class="chat-bubble chat-user">
+        <p><strong>You</strong></p>
+        <p>{{ msg.content }}</p>
+      </div>
+      {% endif %}
+    {% endfor %}
+  {% else %}
+  <p class="muted">No conversation yet.</p>
+  {% endif %}
+</section>
+
+<a href="/dashboard" class="btn btn-outline">Back to dashboard</a>
+{% endblock %}
