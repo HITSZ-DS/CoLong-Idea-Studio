@@ -2,44 +2,82 @@
 
 <div align="center">
 
-**动态记忆的协同式长篇小说生成智能体框架**
+**动态记忆优先的协同式长篇创意与小说生成智能体框架**
+
+[Project Page / 论文展示页](https://xiao-zi-chen.github.io/CoLong-Idea-Studio/) | [English Documentation / 英文文档](README.md)
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Web%20Portal-009688)
 ![ChromaDB](https://img.shields.io/badge/VectorDB-ChromaDB-orange)
-![Mode](https://img.shields.io/badge/Runtime-Memory--Only-success)
+![Mode](https://img.shields.io/badge/Runtime-Dynamic%20Memory--First-success)
 ![Language](https://img.shields.io/badge/Language-%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-red)
+
+**强调学术表达、协同交互与部署可用性 ✦**  
+**面向长篇、分章、强一致性写作任务而设计 (•`-`•)و**
 
 </div>
 
 ## 摘要
 
-`CoLong Idea Studio` 面向“长篇、分章、强一致性”小说生成任务，采用**动态记忆优先**范式。  
-系统在生成过程中持续执行“写作-检索-存储-回注”闭环，以保障跨章节一致性。
+`CoLong Idea Studio` 面向长篇、分章、强一致性的创意写作与小说生成任务，采用**动态记忆优先**范式。  
+系统围绕“**规划 -> 写作 -> 检索 -> 存储 -> 回注**”构建闭环，使后续章节能够持续对齐前文已经形成的人物、设定、事实和叙事承诺。
+
+相较于高度依赖静态知识库的流程，本框架更强调：
+
+1. **协同式创意完善**：在正式写作前，由智能体持续追问并细化用户创意。
+2. **动态记忆驱动生成**：在生成过程中持续回写并检索大纲、事实、人物设定、世界观设定和章节摘要。
+3. **Progress Log 可观测性**：让运行日志显式展示大纲、章节计划、记忆状态与章节级写作信号。
+4. **完成优先的章节执行**：不以评分机制作为主循环中断条件，而以章节完成为第一目标。
+
+## 论文展示页
+
+若需要查看更偏科研展示风格的项目主页，包括系统概览、工作流图、评测快照与仓库入口，请访问：
+
+- [CoLong Idea Studio Project Page](https://xiao-zi-chen.github.io/CoLong-Idea-Studio/)
 
 ## 系统架构
 
 ![CoLong Idea Studio Workflow Diagram](docs/workflow-diagram-colong-idea-studio.png)
 
-> 当前系统架构先使用提供的工作流图片。请将该图片放置到 `docs/workflow-diagram-colong-idea-studio.png`，GitHub 页面即可正常展示。
+当前仓库使用提供的工作流图片作为系统架构图，用于展示从协同式创意完善到动态记忆驱动章节生成的整体路径。
 
 ## 方法设计
 
 ### 1) 章节长度区间推断
 
-第 `t` 章长度区间优先级：
+第 `t` 章长度区间优先级如下：
 
-1. 优先解析章节大纲中的显式区间。
-2. 否则尝试解析全局大纲中的显式区间。
-3. 若仍缺失，则回退到 `0.9 * chapter_target` 到 `1.12 * chapter_target`。
+$$
+[L_{\min}^{(t)},L_{\max}^{(t)}] =
+\begin{cases}
+\text{parse}(\text{chapter\_outline}^{(t)}) & \text{若章节大纲存在显式长度区间} \\
+\text{parse}(\text{global\_outline}) & \text{否则尝试解析全局大纲中的长度区间} \\
+[0.9L_{\text{target}}^{(t)},1.12L_{\text{target}}^{(t)}] & \text{回退策略}
+\end{cases}
+$$
+
+在当前设计中，章节长度更适合作为一种**由大纲语义驱动的 prompt 级约束信号**，而不是仅靠环境变量实现的僵硬硬上限。对于长创意文本来说，叙事完整性通常比机械的字符截断更重要。
 
 ### 2) 动态记忆上下文构建
 
-写作提示上下文由以下部分组成：
+写作提示上下文由以下三部分组成：
 
 1. 固定注入：滚动摘要、最近章节摘要、最近事实卡片。
-2. 语义检索：从动态记忆向量库召回相关条目。
-3. 类型聚合：人物、大纲、世界观、情节与事实分组组织。
+2. 语义检索：从动态记忆向量库中召回相关条目。
+3. 类型聚合：按人物、大纲、世界观、情节与事实卡片进行组织后再注入提示词。
+
+### 3) 协同式创意完善作为 Agent 过程
+
+创意阶段被实现为**Agent 级协同循环**，而不是简单的前端问答辅助。`Idea Copilot Agent` 会持续追问，直到用户明确确认创意已经足够成熟，可以进入正式写作阶段。
+
+典型协同路径如下：
+
+1. 用户给出初始题材、设定、主题或剧情种子。
+2. 智能体围绕冲突、设定、人物动机、叙事语气、结构和受众预期提出针对性问题。
+3. 用户逐轮补充与修正创意。
+4. 当用户明确确认后，系统将创意结果固化为更稳定的写作 brief，并进入大纲生成阶段。
+
+这一设计可显著降低“创意输入过于粗糙”导致的后续漂移问题，也更符合协同式长文本生成系统的研究定位 ✧
 
 ---
 
@@ -69,14 +107,16 @@ chapter=<n>, words=<w>, planned_total=<p>, target=<t>, min=<l>, max=<u>, topic=<
 |---|---|
 | `global_outline` | 全局大纲落库 |
 | `chapter_outline_ready` | 章节大纲集合就绪 |
-| `chapter_plan` | 当前章节计划 |
+| `chapter_plan` | 当前章节写作计划 |
 | `chapter_outline` | 当前章节大纲摘要 |
-| `chapter_length_plan` | 本章 target 与来源 |
+| `chapter_length_plan` | 本章 target 与推断来源 |
 | `chapter_length_warning` | 实际字数偏离期望区间 |
 | `character_setting` | 人物设定写入 |
 | `world_setting` | 世界观设定写入 |
-| `memory_snapshot` | memory 快照 |
-| `outline_character/world/retrieval` | 大纲阶段写入 |
+| `memory_snapshot` | 动态记忆快照 |
+| `outline_character/world/retrieval` | 大纲阶段产物日志 |
+
+Progress Log 被有意设计为更丰富、更透明的观测层，使用户不仅能看到生成结果，也能看到隐藏在生成后的大纲、计划、记忆和设定层信息 ✦
 
 ---
 
@@ -93,19 +133,22 @@ chapter=<n>, words=<w>, planned_total=<p>, target=<t>, min=<l>, max=<u>, topic=<
 
 说明：
 
-1. `texts` 保存章节正文与阶段文本。
-2. `outlines` 保存全局大纲、章节计划、章节摘要、滚动摘要。
-3. `fact_cards` 作为轻量事实约束，降低跨章漂移。
+1. `texts` 保存章节正文与阶段性文本产物。
+2. `outlines` 保存全局大纲、章节计划、章节摘要与滚动摘要。
+3. `fact_cards` 作为轻量事实约束，用于降低跨章节漂移。
+
+在当前配置思路下，项目更适合运行于**动态记忆优先模式**，静态 RAG 与静态知识模块可以在必要时被弱化甚至关闭，以避免对长篇创意生成造成不必要干扰。
 
 ## 项目结构
 
 ```text
 .
-├─ agents/                  # 各种写作Agent
+├─ agents/                  # 写作、检索与协同创意 Agent
 ├─ workflow/                # analyzer / organizer / executor
-├─ rag/                     # 动态记忆与检索
-├─ utils/                   # LLM客户端与工具
+├─ rag/                     # 动态记忆与检索逻辑
+├─ utils/                   # LLM 客户端与工具模块
 ├─ local_web_portal/        # 多用户 FastAPI 门户
+├─ docs/                    # 图片与文档资源
 ├─ config.py                # 配置中心
 └─ main.py                  # CLI 入口
 ```
@@ -140,28 +183,39 @@ copy local_web_portal\.env.example local_web_portal\.env
 python -m uvicorn local_web_portal.app.main:app --host 0.0.0.0 --port 8010
 ```
 
-访问：`http://127.0.0.1:8010`
+访问：
+
+```text
+http://127.0.0.1:8010
+```
 
 ---
 
-## 严格白名单部署原则
+## 部署原则
 
-部署时仅上传运行必需文件，排除：
+面向服务器部署时，建议仅上传运行必需文件，并尽可能排除以下内容：
 
 1. 历史产物：`runs/*`
 2. 历史向量库：`vector_db/*`, `vector_db_tmp/*`
 3. 本地状态：`local_web_portal/data/*`
 4. 缓存与环境：`.venv/*`, `__pycache__/*`, `*.pyc`
 
-该策略可降低体积、简化冷启动并减少泄露风险。
+这种白名单式部署策略可以减少仓库噪声、降低冷启动复杂度，并减少本地运行产物意外泄露的风险。
+
+## 文档入口
+
+GitHub 默认落地页当前使用英文版，以提升公开展示时的可读性。  
+如需查看完整中文说明，请访问：
+
+- [README.zh-CN.md](README.zh-CN.md)
 
 ## 引用
 
 ```bibtex
 @software{colong_idea_studio_2026,
-  title        = {CoLong Idea Studio: A Collaborative Agent Framework for Long-Form Novel Generation with Dynamic Memory},
+  title        = {CoLong Idea Studio: A Dynamic-Memory-First Collaborative Agent Framework for Long-Form Creative Ideation and Story Generation},
   author       = {xiao-zi-chen and contributors},
   year         = {2026},
-  url          = {https://github.com/xiao-zi-chen/CoLong-Idea-Studio}
+  url          = {https://github.com/HITSZ-DS/CoLong-Idea-Studio}
 }
 ```

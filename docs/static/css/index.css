@@ -1,9 +1,9 @@
-/* Modern CSS Variables for consistent theming */
+﻿/* Modern CSS Variables for consistent theming */
 :root {
-  --primary-color: #2563eb;
-  --primary-hover: #1d4ed8;
+  --primary-color: #184e77;
+  --primary-hover: #0f3d5c;
   --secondary-color: #64748b;
-  --accent-color: #0ea5e9;
+  --accent-color: #e09f3e;
   --text-primary: #1e293b;
   --text-secondary: #64748b;
   --text-light: #94a3b8;
@@ -15,9 +15,9 @@
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-accent: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-subtle: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  --gradient-primary: linear-gradient(135deg, #184e77 0%, #1d7874 100%);
+  --gradient-accent: linear-gradient(135deg, #f4d35e 0%, #ee964b 100%);
+  --gradient-subtle: linear-gradient(135deg, #f8f4e3 0%, #dfe7fd 100%);
   --border-radius: 12px;
   --border-radius-lg: 16px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -873,3 +873,226 @@ a:focus {
 
 
 
+
+/* CoLong Idea Studio Project Page Refresh */
+.colong-hero {
+  background:
+    radial-gradient(circle at top left, rgba(244, 211, 94, 0.16), transparent 28%),
+    radial-gradient(circle at top right, rgba(29, 120, 116, 0.18), transparent 32%),
+    linear-gradient(180deg, #f7fbfc 0%, #eef6f8 100%);
+}
+
+.eyebrow-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.eyebrow-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(24, 78, 119, 0.08);
+  color: var(--primary-color);
+  border: 1px solid rgba(24, 78, 119, 0.12);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.hero-note {
+  max-width: 760px;
+  margin: 1.25rem auto 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--border-radius-lg);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow-md);
+  color: var(--text-secondary);
+  font-size: 1rem;
+}
+
+.stat-grid {
+  margin-top: 1.75rem;
+}
+
+.mini-stat-card {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(24, 78, 119, 0.1);
+  box-shadow: var(--shadow-md);
+  border-radius: var(--border-radius-lg);
+  padding: 1.2rem;
+}
+
+.mini-stat-value {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 0.45rem;
+}
+
+.mini-stat-label {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.section-soft {
+  background: linear-gradient(180deg, rgba(255,255,255,0.75) 0%, rgba(244,248,249,0.96) 100%);
+  border-top: 1px solid rgba(24, 78, 119, 0.08);
+  border-bottom: 1px solid rgba(24, 78, 119, 0.08);
+}
+
+.section-intro {
+  max-width: 760px;
+  margin: 0 auto 1.5rem;
+  color: var(--text-secondary);
+  font-size: 1.02rem;
+}
+
+.info-panel,
+.contribution-card,
+.method-card {
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1.5rem;
+  height: 100%;
+}
+
+.info-panel h3,
+.contribution-card h3,
+.method-card h3 {
+  margin-bottom: 0.8rem !important;
+}
+
+.tall-panel {
+  min-height: 100%;
+}
+
+.feature-list {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.feature-list li {
+  margin-bottom: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.feature-list a {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.callout-box {
+  margin-top: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--border-radius);
+  background: linear-gradient(135deg, rgba(24, 78, 119, 0.08), rgba(224, 159, 62, 0.12));
+  color: var(--text-primary);
+}
+
+.contribution-grid {
+  margin-top: 0.5rem;
+}
+
+.contribution-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.contribution-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 4px;
+  background: var(--gradient-accent);
+}
+
+.contribution-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(24, 78, 119, 0.08);
+  color: var(--primary-color);
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+}
+
+.figure-frame {
+  background: rgba(255,255,255,0.92);
+  padding: 1rem;
+  border-radius: 24px;
+  border: 1px solid rgba(24, 78, 119, 0.08);
+}
+
+.figure-frame img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.narrow-frame {
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.method-card {
+  position: relative;
+  padding-top: 3rem;
+}
+
+.method-index {
+  position: absolute;
+  top: 1rem;
+  left: 1.5rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent-color);
+}
+
+.log-sample {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.log-sample div {
+  padding: 0.75rem 0.9rem;
+  background: var(--background-accent);
+  border-radius: var(--border-radius);
+  border: 1px solid rgba(24, 78, 119, 0.08);
+}
+
+.muted-copy {
+  color: var(--text-secondary);
+}
+
+.align-left {
+  text-align: left;
+}
+
+@media screen and (max-width: 768px) {
+  .hero-note {
+    font-size: 0.95rem;
+  }
+
+  .log-sample {
+    grid-template-columns: 1fr;
+  }
+
+  .publication-header .hero-body {
+    padding: 4.5rem 1rem 3rem;
+  }
+}
