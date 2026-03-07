@@ -4,7 +4,7 @@
 
 **A Dynamic-Memory-First Collaborative Agent Framework for Long-Form Creative Ideation and Story Generation**
 
-[Project Page / Paper Showcase](https://xiao-zi-chen.github.io/CoLong-Idea-Studio/) | [???? / Chinese Documentation](README.zh-CN.md)
+[Project Page / Paper Showcase](https://xiao-zi-chen.github.io/CoLong-Idea-Studio/) | [Chinese Documentation / 中文文档](README.zh-CN.md)
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Web%20Portal-009688)
@@ -12,38 +12,38 @@
 ![Mode](https://img.shields.io/badge/Runtime-Dynamic%20Memory--First-success)
 ![Language](https://img.shields.io/badge/Default-English-red)
 
-**Research-oriented, collaboration-ready, and deployment-conscious ?**  
-**Built for long-form, chaptered, and high-consistency writing tasks (?`-`?)?**
+**✦ Research-oriented, collaboration-ready, and deployment-conscious**  
+**✧ Built for long-form, chaptered, and high-consistency writing tasks (*`-`*)**
 
-?? Dynamic Memory First  |  ?? Collaborative Ideation  |  ?? Observable Logs  |  ?? Long-Form Story Generation
+**🧠 Dynamic Memory First**  |  **🤝 Collaborative Ideation**  |  **📝 Observable Logs**  |  **📚 Long-Form Story Generation**
 
 </div>
 
-## Abstract ?
+## ✦ Abstract
 
 `CoLong Idea Studio` is designed for long-form, chaptered, and high-consistency creative writing tasks, following a **dynamic-memory-first** paradigm.  
 The system is organized around a closed loop of **planning -> writing -> retrieval -> storage -> reinjection**, allowing later chapters to remain aligned with previously established characters, settings, facts, and narrative commitments.
 
 Compared with workflows that rely heavily on static knowledge bases, this framework places stronger emphasis on:
 
-1. **Collaborative ideation**: before formal writing begins, the agent keeps asking targeted questions to refine the user's idea.
-2. **Dynamic-memory-driven generation**: outlines, facts, character settings, world settings, and chapter summaries are continuously written back and retrieved during generation.
+1. **🤝 Collaborative ideation**: before formal writing begins, the agent keeps asking targeted questions to refine the user's idea.
+2. **🧠 Dynamic-memory-driven generation**: outlines, facts, character settings, world settings, and chapter summaries are continuously written back and retrieved during generation.
 
-## Project Page ???
+## 🏛️ Project Page
 
 For a more academic, paper-style showcase page including system overview, workflow figure, evaluation snapshot, and repository links, please visit:
 
 - [CoLong Idea Studio Project Page](https://xiao-zi-chen.github.io/CoLong-Idea-Studio/)
 
-## Architecture ??
+## 🧩 Architecture
 
 ![CoLong Idea Studio Workflow Diagram](docs/workflow-diagram-colong-idea-studio.png)
 
 The current repository uses the provided workflow figure as the system architecture diagram, illustrating the full path from collaborative ideation to dynamic-memory-guided story generation.
 
-## Methodology ??
+## ✍️ Methodology
 
-### 2) Dynamic Memory Context Construction ??
+### 🧠 2) Dynamic Memory Context Construction
 
 The writing prompt context is composed of three parts:
 
@@ -51,7 +51,7 @@ The writing prompt context is composed of three parts:
 2. Semantic retrieval: relevant entries recalled from the dynamic-memory vector store.
 3. Type-aware grouping: characters, outlines, world settings, plot points, and fact cards are grouped before prompt assembly.
 
-### 3) Collaborative Ideation as an Agent Procedure ??
+### 🤝 3) Collaborative Ideation as an Agent Procedure
 
 The ideation stage is implemented as an **agent-level collaborative loop**, rather than a simple frontend Q&A helper. The `Idea Copilot Agent` continues asking questions until the user explicitly confirms that the idea is mature enough to proceed into formal writing.
 
@@ -62,11 +62,11 @@ A typical collaborative trajectory is:
 3. The user iteratively supplements and refines the idea.
 4. Once the user explicitly confirms readiness, the system consolidates the ideation result into a more stable writing brief and enters the outline-generation stage.
 
-This design substantially reduces downstream drift caused by underspecified creative input, and better matches the research positioning of collaborative long-form generation systems ?
+✧ This design substantially reduces downstream drift caused by underspecified creative input, and better matches the research positioning of collaborative long-form generation systems (o^_^o)
 
 ---
 
-## Progress Log Protocol ??
+## 📝 Progress Log Protocol
 
 Path:
 
@@ -101,11 +101,11 @@ Representative events:
 | `memory_snapshot` | Dynamic-memory snapshot |
 | `outline_character/world/retrieval` | Outline-stage artifact logs |
 
-The Progress Log is intentionally designed as a rich and transparent observation layer, so users can inspect not only final generation results but also the hidden outline, planning, memory, and setting-level signals behind them ?
+✦ The Progress Log is intentionally designed as a rich and transparent observation layer, so users can inspect not only final generation results but also the hidden outline, planning, memory, and setting-level signals behind them (=^.^=)
 
 ---
 
-## Dynamic Memory Model ??
+## 🧠 Dynamic Memory Model
 
 `memory_index.json` maintains the following buckets:
 
@@ -124,30 +124,30 @@ Notes:
 
 Under the current configuration philosophy, the project is best suited to run in a **dynamic-memory-priority mode**, where static RAG and static knowledge components can be weakened or disabled whenever they do not help long-form creative generation.
 
-## Repository Structure ??
+## 📁 Repository Structure
 
 ```text
 .
-?? agents/                  # writing, retrieval, and collaborative ideation agents
-?? workflow/                # analyzer / organizer / executor
-?? rag/                     # dynamic memory and retrieval logic
-?? utils/                   # LLM client and utility modules
-?? local_web_portal/        # multi-user FastAPI portal
-?? docs/                    # figures and documentation assets
-?? config.py                # configuration center
-?? main.py                  # CLI entry
+├─ agents/                  # writing, retrieval, and collaborative ideation agents
+├─ workflow/                # analyzer / organizer / executor
+├─ rag/                     # dynamic memory and retrieval logic
+├─ utils/                   # LLM client and utility modules
+├─ local_web_portal/        # multi-user FastAPI portal
+├─ docs/                    # figures and documentation assets
+├─ config.py                # configuration center
+└─ main.py                  # CLI entry
 ```
 
 ---
 
-## Quick Start ??
+## 🚀 Quick Start
 
 ### CLI
 
 ```bash
 python -m venv .venv
 # Windows
-.venv\Scriptsctivate
+.venv\Scripts\activate
 # Linux/macOS
 # source .venv/bin/activate
 
@@ -156,7 +156,7 @@ python -m pip install -r requirements.txt
 python main.py
 ```
 
-### Web Portal ??
+### 🌐 Web Portal
 
 ```bash
 python -m pip install -r requirements.txt
@@ -176,7 +176,7 @@ http://127.0.0.1:8010
 
 ---
 
-## Deployment Principle ??
+## 📦 Deployment Principle
 
 For server deployment, it is recommended to upload only runtime-required files and exclude the following whenever possible:
 
@@ -187,14 +187,14 @@ For server deployment, it is recommended to upload only runtime-required files a
 
 This whitelist-oriented deployment strategy reduces repository noise, lowers cold-start complexity, and minimizes the risk of unintentionally exposing local runtime artifacts.
 
-## Documentation Entry ??
+## 🌐 Documentation Entry
 
 The default GitHub landing page is intentionally presented in English for broader public visibility.  
 For the full Simplified Chinese documentation, please visit:
 
 - [README.zh-CN.md](README.zh-CN.md)
 
-## Citation ??
+## 📚 Citation
 
 ```bibtex
 @software{colong_idea_studio_2026,
