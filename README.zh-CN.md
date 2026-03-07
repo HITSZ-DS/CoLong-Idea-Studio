@@ -38,10 +38,16 @@
 
 以下是两个界面示例：
 
-<p align="center">
-  <img src="docs/demo1.png" alt="Demo 1" width="48%">
-  <img src="docs/demo2.png" alt="Demo 2" width="48%">
-</p>
+<table align="center">
+  <tr>
+    <td align="center" valign="top">
+      <img src="docs/demo1.png" alt="Demo 1" width="520">
+    </td>
+    <td align="center" valign="top">
+      <img src="docs/demo2.png" alt="Demo 2" width="520">
+    </td>
+  </tr>
+</table>
 
 ## 🏛️ 论文展示页
 
