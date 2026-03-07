@@ -39,11 +39,8 @@
 以下是两个界面示例：
 
 <p align="center">
-  <img src="docs/demo1.png" alt="Demo 1" width="640">
-</p>
-
-<p align="center">
-  <img src="docs/demo2.png" alt="Demo 2" width="640">
+  <img src="docs/demo1.png" alt="Demo 1" width="48%">
+  <img src="docs/demo2.png" alt="Demo 2" width="48%">
 </p>
 
 ## 🏛️ 论文展示页
