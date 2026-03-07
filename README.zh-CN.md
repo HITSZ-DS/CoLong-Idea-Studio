@@ -38,9 +38,13 @@
 
 以下是两个界面示例：
 
-![Demo 1](docs/demo1.png)
+<p align="center">
+  <img src="docs/demo1.png" alt="Demo 1" width="640">
+</p>
 
-![Demo 2](docs/demo2.png)
+<p align="center">
+  <img src="docs/demo2.png" alt="Demo 2" width="640">
+</p>
 
 ## 🏛️ 论文展示页
 
