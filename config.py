@@ -136,8 +136,8 @@ class Config:
         self.temperature: float = float(os.getenv("TEMPERATURE", "0.7"))
         # 最大输出token，默认 8000（可通过环境变量覆盖，但高于接口上限会在客户端再截断）
         self.max_tokens: int = int(os.getenv("MAX_TOKENS", "8000"))
-        # LLM call timeout/retry controls to avoid hanging indefinitely on network/provider stalls.
-        self.llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "240"))
+        # LLM call timeout/retry controls. Set LLM_TIMEOUT_SECONDS=0 to disable request timeout.
+        self.llm_timeout_seconds: int = int(os.getenv("LLM_TIMEOUT_SECONDS", "0"))
         self.llm_max_retries: int = int(os.getenv("LLM_MAX_RETRIES", "1"))
         default_model = "deepseek-chat" if self.llm_provider == "deepseek" else "gpt-5.2"
         self.model_name: str = os.getenv("MODEL_NAME", default_model)

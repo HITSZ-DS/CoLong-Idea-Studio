@@ -12,10 +12,12 @@ class LLMClient:
     
     def __init__(self, config: Config):
         self.config = config
+        timeout_seconds = getattr(config, "llm_timeout_seconds", 0)
+        client_timeout = None if timeout_seconds <= 0 else timeout_seconds
         self.client = OpenAI(
             api_key=config.api_key,
             base_url=config.api_base_url,
-            timeout=getattr(config, "llm_timeout_seconds", 240),
+            timeout=client_timeout,
             max_retries=getattr(config, "llm_max_retries", 1),
         )
     
@@ -52,11 +54,12 @@ class LLMClient:
             )
         try:
             if getattr(self.config, "llm_call_log", True):
+                timeout_display = "disabled" if getattr(self.config, "llm_timeout_seconds", 0) <= 0 else f"{getattr(self.config, 'llm_timeout_seconds', 0)}s"
                 print(
                     f"[LLM] start provider={self.config.llm_provider} "
                     f"model={model or self.config.model_name} "
                     f"wire={getattr(self.config, 'wire_api', 'chat')} "
-                    f"timeout={getattr(self.config, 'llm_timeout_seconds', 240)}s"
+                    f"timeout={timeout_display}"
                 )
             started = time.perf_counter()
             if getattr(self.config, "wire_api", "chat") == "responses":

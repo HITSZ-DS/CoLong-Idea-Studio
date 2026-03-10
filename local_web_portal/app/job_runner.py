@@ -106,6 +106,15 @@ def _provider_env(
         "MODEL_NAME": spec.model,
         "WIRE_API": spec.wire_api,
         "RUNS_DIR": str(RUNS_DIR),
+        "MAX_ITERATIONS": str(settings.max_iterations),
+        "MAX_TOTAL_ITERATIONS": str(settings.max_total_iterations),
+        "FAST_MODE": "1" if settings.fast_mode else "0",
+        "FULL_CYCLE_INTERVAL": str(settings.full_cycle_interval),
+        "CHAPTERS_PER_ITER": str(settings.chapters_per_iter),
+        "MAX_CHAPTER_SUBROUNDS": str(settings.max_chapter_subrounds),
+        "EVAL_INTERVAL": str(settings.eval_interval),
+        "LLM_TIMEOUT_SECONDS": os.getenv("LLM_TIMEOUT_SECONDS", "0"),
+        "LLM_MAX_RETRIES": os.getenv("LLM_MAX_RETRIES", "1"),
         # Keep default behavior close to original pipeline (full-rag).
         "MEMORY_ONLY_MODE": os.getenv("WEB_MEMORY_ONLY_MODE", "0"),
         "ENABLE_RAG": os.getenv("WEB_ENABLE_RAG", "1"),
@@ -236,6 +245,7 @@ def _run_worker_subprocess(
         bufsize=1,
     )
     started = time.monotonic()
+    last_output_at = started
     line_queue: "queue.Queue[Optional[str]]" = queue.Queue()
     reader = threading.Thread(target=_stdout_reader, args=(process.stdout, line_queue), daemon=True)
     reader.start()
@@ -255,6 +265,7 @@ def _run_worker_subprocess(
             elif line:
                 clean = line.rstrip("\n")
                 if clean:
+                    last_output_at = time.monotonic()
                     log_fp.write(clean + "\n")
                     log_fp.flush()
                     print(f"[worker][job:{run_id}] {clean}")
@@ -278,11 +289,18 @@ def _run_worker_subprocess(
                 log_fp.flush()
                 raise RuntimeError("Job canceled while worker was running.")
 
-            if time.monotonic() - started > settings.job_timeout_seconds:
+            now = time.monotonic()
+            if settings.job_timeout_seconds > 0 and now - started > settings.job_timeout_seconds:
                 process.kill()
                 log_fp.write("[system] worker killed due to timeout.\n")
                 log_fp.flush()
                 raise TimeoutError(f"Worker exceeded timeout: {settings.job_timeout_seconds}s")
+
+            if settings.job_idle_timeout_seconds > 0 and now - last_output_at > settings.job_idle_timeout_seconds:
+                process.kill()
+                log_fp.write("[system] worker killed due to idle timeout.\n")
+                log_fp.flush()
+                raise TimeoutError(f"Worker exceeded idle timeout: {settings.job_idle_timeout_seconds}s")
 
             if process.poll() is not None and (stdout_closed or line_queue.empty()):
                 break

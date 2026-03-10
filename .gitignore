@@ -1,0 +1,12 @@
+.env
+*.pyc
+__pycache__/
+
+local_web_portal/.env
+local_web_portal/data/
+
+runs/
+vector_db/
+
+.venv/
+venv/

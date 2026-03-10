@@ -48,11 +48,17 @@ class Settings:
     default_provider: str = os.getenv("WEB_DEFAULT_PROVIDER", "deepseek").lower()
     max_iterations: int = int(os.getenv("WEB_MAX_ITERATIONS", "8"))
     max_total_iterations: int = int(os.getenv("WEB_MAX_TOTAL_ITERATIONS", "16"))
-    job_timeout_seconds: int = int(os.getenv("WEB_JOB_TIMEOUT_SECONDS", "3600"))
+    job_timeout_seconds: int = int(os.getenv("WEB_JOB_TIMEOUT_SECONDS", "0"))
+    job_idle_timeout_seconds: int = int(os.getenv("WEB_JOB_IDLE_TIMEOUT_SECONDS", "0"))
     # Jobs are executed by in-process daemon threads; after app restart they cannot resume.
     # Recover stale running/queued jobs quickly to avoid "ghost running" states in UI.
     startup_recovery_seconds: int = int(os.getenv("WEB_STARTUP_RECOVERY_SECONDS", "180"))
     stale_queued_seconds: int = int(os.getenv("WEB_STALE_QUEUED_SECONDS", "180"))
+    fast_mode: bool = os.getenv("WEB_FAST_MODE", "1") == "1"
+    full_cycle_interval: int = int(os.getenv("WEB_FULL_CYCLE_INTERVAL", "3"))
+    chapters_per_iter: int = int(os.getenv("WEB_CHAPTERS_PER_ITER", "1"))
+    max_chapter_subrounds: int = int(os.getenv("WEB_MAX_CHAPTER_SUBROUNDS", "2"))
+    eval_interval: int = int(os.getenv("WEB_EVAL_INTERVAL", "8"))
 
     deepseek_base_url: str = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
     deepseek_model: str = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")

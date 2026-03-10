@@ -46,6 +46,16 @@ python -m uvicorn local_web_portal.app.main:app --host 127.0.0.1 --port 8010
 
 During active development, you can add `--reload`. For long-running generation jobs, running without reload is more stable.
 
+If you want jobs to stop only when generation truly finishes, keep these in `local_web_portal/.env`:
+
+```text
+WEB_JOB_TIMEOUT_SECONDS=0
+WEB_JOB_IDLE_TIMEOUT_SECONDS=0
+LLM_TIMEOUT_SECONDS=0
+```
+
+`0` means timeout disabled.
+
 Open:
 
 ```text
