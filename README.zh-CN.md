@@ -178,14 +178,20 @@ python main.py
 
 ### 🌐 Web 门户
 
-```bash
+先手动准备虚拟环境与依赖：
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip setuptools wheel
 python -m pip install -r requirements.txt
-python -m pip install -r local_web_portal/requirements.txt
-# Windows
-copy local_web_portal\.env.example local_web_portal\.env
-# Linux/macOS
-# cp local_web_portal/.env.example local_web_portal/.env
-python -m uvicorn local_web_portal.app.main:app --host 0.0.0.0 --port 8010
+python -m pip install -r local_web_portal\requirements.txt
+```
+
+然后使用仓库启动脚本：
+
+```bash
+.\start_local.ps1
 ```
 
 访问：
@@ -193,6 +199,21 @@ python -m uvicorn local_web_portal.app.main:app --host 0.0.0.0 --port 8010
 ```text
 http://127.0.0.1:8010
 ```
+
+可选启动参数：
+
+```powershell
+.\start_local.ps1 -BindHost 0.0.0.0 -Port 8010
+.\start_local.ps1 -Reload
+```
+
+说明：
+
+- 本地启动不要求手动创建 `local_web_portal/.env`
+- 支持的 Python 版本为 `3.10+`
+- 虚拟环境和依赖安装由用户手动控制
+- 如果已有 `.venv` 使用了不受支持的 Python 版本，请手动重建
+- 详细排障说明见 [RUN_LOCAL_WEB.md](RUN_LOCAL_WEB.md)
 
 ---
 
