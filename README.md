@@ -161,16 +161,32 @@ python -m pip install -r requirements.txt
 python main.py
 ```
 
+### Recommended Local Entry
+
+For the local web portal, prefer the repository launchers instead of typing `uvicorn` manually:
+
+```powershell
+.\start_local.ps1
+```
+
+or:
+
+```cmd
+start_local.cmd
+```
+
+Why this is the recommended path:
+
+- it creates `.venv` automatically when needed
+- it installs both root and web portal dependencies
+- it validates that `local_web_portal.app.main:app` can be imported before startup
+- it avoids common failures caused by the wrong global Python or the wrong global `uvicorn`
+- it disables embedding-model downloads by default during local startup
+
 ### 🌐 Web Portal
 
 ```bash
-python -m pip install -r requirements.txt
-python -m pip install -r local_web_portal/requirements.txt
-# Windows
-copy local_web_portal\.env.example local_web_portal\.env
-# Linux/macOS
-# cp local_web_portal/.env.example local_web_portal/.env
-python -m uvicorn local_web_portal.app.main:app --host 0.0.0.0 --port 8010
+.\start_local.ps1
 ```
 
 Access:
@@ -178,6 +194,20 @@ Access:
 ```text
 http://127.0.0.1:8010
 ```
+
+Optional startup flags:
+
+```powershell
+.\start_local.ps1 -BindHost 0.0.0.0 -Port 8010
+.\start_local.ps1 -Reload
+```
+
+Operational notes:
+
+- local startup does not require manually creating `local_web_portal/.env`
+- supported Python target is `3.10+`
+- if an old `.venv` was created with an unsupported Python version, rerun the launcher and recreate the environment
+- for detailed local troubleshooting, see [RUN_LOCAL_WEB.md](RUN_LOCAL_WEB.md)
 
 ---
 
@@ -191,6 +221,22 @@ For server deployment, it is recommended to upload only runtime-required files a
 4. Caches and environments: `.venv/*`, `__pycache__/*`, `*.pyc`
 
 This whitelist-oriented deployment strategy reduces repository noise, lowers cold-start complexity, and minimizes the risk of unintentionally exposing local runtime artifacts.
+
+### Deployment Recommendations
+
+For a clean deployment package:
+
+- follow [DEPLOY_WHITELIST.md](DEPLOY_WHITELIST.md)
+- keep only source code, launchers, and required docs in the repository snapshot
+- do not upload runtime state, generated runs, local vector databases, or private secrets
+
+For production-style deployment:
+
+- use a dedicated Python virtual environment instead of a system-wide interpreter
+- set provider API keys in the real deployment environment rather than committing them into the repository
+- persist `local_web_portal/data/` and `runs/` outside the repository if you need durability
+- front the app with a reverse proxy if you expose it publicly
+- treat `RUN_LOCAL_WEB.md` as the first-line startup checklist for operators
 
 ## 🌐 Documentation Entry
 
