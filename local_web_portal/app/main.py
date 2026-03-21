@@ -8,6 +8,7 @@ import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, RedirectResponse
@@ -27,6 +28,7 @@ from agents.idea_copilot_agent import (
     load_state,
 )
 from .db import SessionLocal, engine, get_db
+from .i18n import get_locale, install_i18n, set_locale, translate
 from .job_runner import run_generation_job
 from .models import ApiCredential, Base, GenerationJob, IdeaCopilotSession, ProviderConfig, User
 from .provider_registry import (
@@ -44,15 +46,15 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 ANSI_ESCAPE_RE = re.compile(r"\x1B\[[0-?]*[ -/]*[@-~]")
 
 EVENT_LABELS = {
-    "global_outline": "Global outline",
-    "chapter_outline_ready": "Chapter outlines ready",
-    "chapter_plan": "Chapter plan",
-    "chapter_outline": "Chapter outline",
-    "chapter_length_plan": "Chapter length plan",
-    "chapter_length_warning": "Chapter length warning",
-    "character_setting": "Character setting",
-    "world_setting": "World setting",
-    "memory_snapshot": "Memory snapshot",
+    "global_outline": "event.global_outline",
+    "chapter_outline_ready": "event.chapter_outline_ready",
+    "chapter_plan": "event.chapter_plan",
+    "chapter_outline": "event.chapter_outline",
+    "chapter_length_plan": "event.chapter_length_plan",
+    "chapter_length_warning": "event.chapter_length_warning",
+    "character_setting": "event.character_setting",
+    "world_setting": "event.world_setting",
+    "memory_snapshot": "event.memory_snapshot",
 }
 
 MEMORY_COUNT_KEYS = (
@@ -74,6 +76,7 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "app" / "static"), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
+install_i18n(templates)
 
 
 @app.on_event("startup")
@@ -131,8 +134,30 @@ def _require_user(request: Request, db: Session) -> User:
     return user
 
 
-def _redirect(path: str) -> RedirectResponse:
-    return RedirectResponse(path, status_code=status.HTTP_303_SEE_OTHER)
+def _redirect(path: str, **query: str) -> RedirectResponse:
+    parts = urlsplit(path)
+    params = dict(parse_qsl(parts.query, keep_blank_values=True))
+    for key, value in query.items():
+        if value is None:
+            continue
+        params[key] = str(value)
+    target = urlunsplit(
+        (
+            parts.scheme,
+            parts.netloc,
+            parts.path,
+            urlencode(params, doseq=True),
+            parts.fragment,
+        )
+    )
+    return RedirectResponse(target, status_code=status.HTTP_303_SEE_OTHER)
+
+
+def _safe_next_path(value: str | None) -> str:
+    raw = (value or "").strip()
+    if not raw or not raw.startswith("/") or raw.startswith("//"):
+        return "/"
+    return raw
 
 
 def _mask_hint(raw: str) -> str:
@@ -207,11 +232,11 @@ def _provider_api_key(db: Session, user_id: int, provider: str) -> str:
         )
     ).scalar_one_or_none()
     if not row:
-        raise ValueError("Save your API key for that provider first")
+        raise ValueError("provider.api_key_missing")
     try:
         return decrypt_api_key(row.encrypted_key)
     except Exception as exc:
-        raise ValueError(f"Failed to decrypt API key: {exc}") from exc
+        raise ValueError("provider.api_key_decrypt_failed") from exc
 
 
 def _create_generation_job(db: Session, user_id: int, provider: str, idea: str) -> GenerationJob:
@@ -565,6 +590,242 @@ def _build_progress_snapshot(job: GenerationJob, run_dir: Optional[Path], worker
     return snapshot
 
 
+def _default_progress_snapshot(locale: str) -> Dict:
+    return {
+        "phase": "running",
+        "phase_label": translate("phase.running", locale),
+        "phase_note": "",
+        "elapsed_seconds": 0,
+        "current_chapter": 0,
+        "planned_total": 0,
+        "chapter_words": 0,
+        "total_words": 0,
+        "percent": 0,
+        "last_log_at": "",
+        "idle_seconds": -1,
+        "stalled": False,
+        "stall_reason": "",
+        "memory_counts": {
+            "texts": 0,
+            "outlines": 0,
+            "characters": 0,
+            "world_settings": 0,
+            "plot_points": 0,
+            "fact_cards": 0,
+        },
+    }
+
+
+def _parse_progress_log(progress_log_text: str, locale: str) -> Dict:
+    snapshot = {
+        "current_chapter": 0,
+        "planned_total": 0,
+        "chapter_words": 0,
+        "total_words": 0,
+        "phase_note": "",
+        "memory_counts": {k: 0 for k in MEMORY_COUNT_KEYS},
+    }
+    if not progress_log_text:
+        return snapshot
+
+    for raw in progress_log_text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if line.startswith("chapter="):
+            try:
+                parts = dict(
+                    kv.strip().split("=", 1)
+                    for kv in line.split(",")
+                    if "=" in kv
+                )
+                snapshot["current_chapter"] = int(parts.get("chapter", snapshot["current_chapter"]))
+                snapshot["planned_total"] = int(parts.get("planned_total", snapshot["planned_total"]))
+                snapshot["chapter_words"] = int(parts.get("words", snapshot["chapter_words"]))
+            except Exception:
+                pass
+        elif line.startswith("total_words="):
+            try:
+                snapshot["total_words"] = int(line.split("=", 1)[1].strip())
+            except Exception:
+                pass
+        elif line.startswith("[event]"):
+            try:
+                parts = [seg.strip() for seg in line.split("|")]
+                if len(parts) < 2:
+                    continue
+
+                event_name = parts[1]
+                detail_parts: List[str] = []
+                chapter_no = 0
+
+                for seg in parts[2:]:
+                    if seg.startswith("chapter "):
+                        m_ch = re.search(r"chapter\s+(\d+)", seg)
+                        if m_ch:
+                            chapter_no = int(m_ch.group(1))
+                    elif seg:
+                        detail_parts.append(seg)
+
+                detail = " | ".join(detail_parts)
+                if chapter_no > 0:
+                    snapshot["current_chapter"] = max(snapshot["current_chapter"], chapter_no)
+
+                if event_name == "chapter_outline_ready" and snapshot["planned_total"] <= 0:
+                    m_plan = re.search(r"count\s*=\s*(\d+)", detail)
+                    if m_plan:
+                        snapshot["planned_total"] = int(m_plan.group(1))
+
+                if event_name == "memory_snapshot":
+                    detail_map = {
+                        k.strip(): v.strip()
+                        for k, v in (
+                            item.split("=", 1)
+                            for item in detail.split(",")
+                            if "=" in item
+                        )
+                    }
+                    for key in MEMORY_COUNT_KEYS:
+                        if key in detail_map:
+                            try:
+                                snapshot["memory_counts"][key] = int(detail_map[key])
+                            except Exception:
+                                pass
+
+                label_key = EVENT_LABELS.get(event_name)
+                label = translate(label_key, locale) if label_key else event_name.replace("_", " ")
+                snapshot["phase_note"] = f"{label}: {detail}" if detail else label
+            except Exception:
+                pass
+    return snapshot
+
+
+def _phase_label(phase: str, locale: str) -> str:
+    if phase.startswith("agent_") and phase.endswith("_done"):
+        return translate("phase.agent_step_done", locale)
+    if phase.startswith("agent_"):
+        return translate("phase.agent_running", locale)
+    label = translate(f"phase.{phase}", locale)
+    if label == f"phase.{phase}":
+        return translate("phase.running", locale)
+    return label
+
+
+def _build_progress_snapshot(
+    job: GenerationJob,
+    run_dir: Optional[Path],
+    worker_log_text: str,
+    progress_log_text: str,
+    locale: str,
+) -> Dict:
+    now = datetime.now(timezone.utc)
+    snapshot = _default_progress_snapshot(locale)
+    created_at = _to_utc(job.created_at)
+    finished_at = _to_utc(job.finished_at)
+    updated_at = _to_utc(job.updated_at)
+
+    terminal = job.status in {"succeeded", "failed", "canceled"}
+    end_ref = finished_at or (updated_at if terminal else now)
+
+    elapsed_seconds = 0
+    if created_at:
+        try:
+            elapsed_seconds = max(0, int((end_ref - created_at).total_seconds()))
+        except Exception:
+            elapsed_seconds = 0
+
+    parsed = _parse_progress_log(progress_log_text, locale)
+    current_chapter = parsed["current_chapter"]
+    planned_total = parsed["planned_total"]
+    chapter_words = parsed["chapter_words"]
+    total_words = parsed["total_words"]
+
+    status_state = _read_status_file(run_dir)
+    if status_state:
+        current_chapter = int(status_state.get("chapter_no") or current_chapter or 0)
+        planned_total = int(status_state.get("planned_total") or planned_total or 0)
+        chapter_words = int(status_state.get("chapter_words") or chapter_words or 0)
+        total_words = int(status_state.get("total_words") or total_words or 0)
+
+    percent = 0
+    if planned_total > 0 and current_chapter > 0:
+        percent = int(min(100, max(0, (current_chapter / planned_total) * 100)))
+
+    last_log_at = ""
+    idle_seconds: Optional[int] = None
+    if run_dir:
+        worker_log = run_dir / "worker.log"
+        if worker_log.exists():
+            try:
+                mtime = datetime.fromtimestamp(worker_log.stat().st_mtime, tz=timezone.utc)
+                last_log_at = mtime.isoformat()
+                anchor = end_ref if terminal else now
+                idle_seconds = max(0, int((anchor - mtime).total_seconds()))
+            except Exception:
+                pass
+
+    phase = job.status if terminal else str(status_state.get("stage") or _infer_phase(worker_log_text))
+    phase_label = _phase_label(phase, locale)
+    phase_note = str(
+        status_state.get("message")
+        or parsed.get("phase_note")
+        or _infer_action_from_worker_log(worker_log_text)
+        or ""
+    )
+    parsed_memory_counts = parsed.get("memory_counts") or {}
+    status_memory_counts = status_state.get("memory_counts") or {}
+    memory_counts: Dict[str, int] = {}
+    for key in MEMORY_COUNT_KEYS:
+        raw_val = status_memory_counts.get(key, parsed_memory_counts.get(key, 0))
+        try:
+            memory_counts[key] = int(raw_val or 0)
+        except Exception:
+            memory_counts[key] = 0
+
+    stalled = False
+    stall_reason = ""
+    if job.status == "running":
+        if not worker_log_text and elapsed_seconds > 20:
+            stalled = True
+            stall_reason = translate("job.stall.no_worker_logs", locale)
+        elif idle_seconds is not None and idle_seconds > 90:
+            stalled = True
+            stall_reason = translate("job.stall.no_new_logs", locale, seconds=idle_seconds)
+
+        if status_state and status_state.get("updated_at"):
+            try:
+                ts = str(status_state.get("updated_at")).replace("Z", "+00:00")
+                sdt = datetime.fromisoformat(ts)
+                if sdt.tzinfo is None:
+                    sdt = sdt.replace(tzinfo=timezone.utc)
+                idle_status = max(0, int((now - sdt.astimezone(timezone.utc)).total_seconds()))
+                if idle_status > 90:
+                    stalled = True
+                    stall_reason = translate("job.stall.status_heartbeat", locale, seconds=idle_status)
+            except Exception:
+                pass
+
+    snapshot.update(
+        {
+            "phase": phase,
+            "phase_label": phase_label,
+            "phase_note": phase_note,
+            "elapsed_seconds": elapsed_seconds,
+            "current_chapter": current_chapter,
+            "planned_total": planned_total,
+            "chapter_words": chapter_words,
+            "total_words": total_words,
+            "percent": percent,
+            "last_log_at": last_log_at,
+            "idle_seconds": idle_seconds if idle_seconds is not None else -1,
+            "stalled": stalled,
+            "stall_reason": stall_reason,
+            "memory_counts": memory_counts if isinstance(memory_counts, dict) else {},
+        }
+    )
+    return snapshot
+
+
 def _load_chapter_outputs(run_dir: Path) -> List[Dict]:
     """
     Load latest finalized chapter files from runs/<run_id>/chapters.
@@ -666,19 +927,19 @@ def register(
     if not EMAIL_RE.match(email):
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Invalid email format."},
+            {"request": request, "error": "notice.auth.invalid_email"},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     if len(password) < 8:
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Password must be at least 8 characters."},
+            {"request": request, "error": "notice.auth.password_short"},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
     if password != confirm_password:
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Passwords do not match."},
+            {"request": request, "error": "notice.auth.password_mismatch"},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -686,7 +947,7 @@ def register(
     if existing:
         return templates.TemplateResponse(
             "register.html",
-            {"request": request, "error": "Email already registered."},
+            {"request": request, "error": "notice.auth.email_registered"},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -717,7 +978,7 @@ def login(
     if not user or not verify_password(password, user.password_hash):
         return templates.TemplateResponse(
             "login.html",
-            {"request": request, "error": "Invalid credentials."},
+            {"request": request, "error": "notice.auth.invalid_credentials"},
             status_code=status.HTTP_400_BAD_REQUEST,
         )
 
@@ -729,6 +990,12 @@ def login(
 def logout(request: Request):
     request.session.clear()
     return _redirect("/login")
+
+
+@app.post("/language")
+def change_language(request: Request, locale: str = Form(...), next: str = Form("/")):
+    set_locale(request, locale)
+    return _redirect(_safe_next_path(next))
 
 
 @app.get("/dashboard")
@@ -798,9 +1065,9 @@ def save_api_key(
     provider_specs = _provider_specs_for_user(db, user.id)
 
     if provider not in provider_specs:
-        return _redirect("/dashboard?error=Unsupported+provider")
+        return _redirect("/dashboard", error="notice.provider.unsupported")
     if len(api_key) < 12:
-        return _redirect("/dashboard?error=API+key+looks+too+short")
+        return _redirect("/dashboard", error="notice.provider.key_short")
 
     cred = db.execute(
         select(ApiCredential).where(
@@ -823,7 +1090,7 @@ def save_api_key(
         db.add(cred)
 
     db.commit()
-    return _redirect("/dashboard?message=API+key+saved")
+    return _redirect("/dashboard", message="notice.provider.key_saved")
 
 
 @app.post("/providers")
@@ -847,18 +1114,18 @@ def save_provider_config(
     norm_wire_api = normalize_wire_api(wire_api)
 
     if not is_valid_slug(norm_slug):
-        return _redirect("/dashboard?error=Invalid+slug.+Use+2-32+chars+(a-z,0-9,_,-)")
+        return _redirect("/dashboard", error="notice.provider.slug_invalid")
     if not norm_base_url:
-        return _redirect("/dashboard?error=Base+URL+cannot+be+empty")
+        return _redirect("/dashboard", error="notice.provider.base_url_empty")
     if not norm_model:
-        return _redirect("/dashboard?error=Model+cannot+be+empty")
+        return _redirect("/dashboard", error="notice.provider.model_empty")
     if not (norm_base_url.startswith("http://") or norm_base_url.startswith("https://")):
-        return _redirect("/dashboard?error=Base+URL+must+start+with+http://+or+https://")
+        return _redirect("/dashboard", error="notice.provider.base_url_invalid")
 
     # Built-in and env-defined providers are reserved.
     base_specs = get_provider_specs(settings)
     if norm_slug in base_specs:
-        return _redirect("/dashboard?error=This+provider+slug+is+reserved.+Use+another+slug")
+        return _redirect("/dashboard", error="notice.provider.slug_reserved")
 
     row = db.execute(
         select(ProviderConfig).where(
@@ -884,7 +1151,7 @@ def save_provider_config(
         db.add(row)
 
     db.commit()
-    return _redirect("/dashboard?message=Custom+provider+saved")
+    return _redirect("/dashboard", message="notice.provider.saved")
 
 
 @app.post("/providers/{slug}/delete")
@@ -901,7 +1168,7 @@ def delete_provider_config(slug: str, request: Request, db: Session = Depends(ge
         )
     ).scalar_one_or_none()
     if not row:
-        return _redirect("/dashboard?error=Custom+provider+not+found")
+        return _redirect("/dashboard", error="notice.provider.not_found")
 
     # Remove key for this custom provider as well to avoid stale entries.
     cred = db.execute(
@@ -915,7 +1182,7 @@ def delete_provider_config(slug: str, request: Request, db: Session = Depends(ge
 
     db.delete(row)
     db.commit()
-    return _redirect("/dashboard?message=Custom+provider+deleted")
+    return _redirect("/dashboard", message="notice.provider.deleted")
 
 
 @app.post("/idea-copilot/start")
@@ -932,17 +1199,17 @@ def start_idea_copilot(
     idea = idea.strip()
     provider = provider.strip().lower()
     if not idea:
-        return _redirect("/dashboard?error=Idea+cannot+be+empty")
+        return _redirect("/dashboard", error="notice.idea.empty")
 
     provider_specs = _provider_specs_for_user(db, user.id)
     spec = provider_specs.get(provider)
     if not spec:
-        return _redirect("/dashboard?error=Unsupported+provider")
+        return _redirect("/dashboard", error="notice.provider.unsupported")
 
     try:
         api_key = _provider_api_key(db, user.id, provider)
     except ValueError as exc:
-        return _redirect(f"/dashboard?error={str(exc).replace(' ', '+')}")
+        return _redirect("/dashboard", error=str(exc))
 
     session = IdeaCopilotSession(
         user_id=user.id,
@@ -1031,20 +1298,20 @@ def idea_copilot_reply(
     if not session or session.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Idea session not found")
     if session.status != "active":
-        return _redirect(f"/idea-copilot/{session_id}?error=Session+is+not+active")
+        return _redirect(f"/idea-copilot/{session_id}", error="notice.copilot.session_inactive")
 
     answer = reply.strip()
     if not answer:
-        return _redirect(f"/idea-copilot/{session_id}?error=Reply+cannot+be+empty")
+        return _redirect(f"/idea-copilot/{session_id}", error="notice.copilot.reply_empty")
 
     provider_specs = _provider_specs_for_user(db, user.id)
     spec = provider_specs.get(session.provider)
     if not spec:
-        return _redirect(f"/idea-copilot/{session_id}?error=Provider+is+no+longer+available")
+        return _redirect(f"/idea-copilot/{session_id}", error="notice.copilot.provider_missing")
     try:
         api_key = _provider_api_key(db, user.id, session.provider)
     except ValueError as exc:
-        return _redirect(f"/idea-copilot/{session_id}?error={str(exc).replace(' ', '+')}")
+        return _redirect(f"/idea-copilot/{session_id}", error=str(exc))
 
     state = load_state(session.conversation_json)
     state = append_user_reply(state, answer)
@@ -1056,7 +1323,7 @@ def idea_copilot_reply(
             latest_user_reply=answer,
         )
     except Exception as exc:
-        return _redirect(f"/idea-copilot/{session_id}?error={str(exc).replace(' ', '+')}")
+        return _redirect(f"/idea-copilot/{session_id}", error=str(exc))
 
     state = append_assistant_turn(state, turn)
     session.conversation_json = dump_state(state)
@@ -1064,7 +1331,7 @@ def idea_copilot_reply(
     session.round_count = int(state.get("round", 0) or 0)
     session.readiness_score = int(turn.get("readiness", 0) or 0)
     db.commit()
-    return _redirect(f"/idea-copilot/{session_id}?message=Updated")
+    return _redirect(f"/idea-copilot/{session_id}", message="notice.copilot.updated")
 
 
 @app.post("/idea-copilot/{session_id}/confirm")
@@ -1079,12 +1346,12 @@ def idea_copilot_confirm(session_id: int, request: Request, db: Session = Depend
     if session.status != "active":
         if session.final_job_id:
             return _redirect(f"/jobs/{session.final_job_id}")
-        return _redirect(f"/idea-copilot/{session_id}?error=Session+is+not+active")
+        return _redirect(f"/idea-copilot/{session_id}", error="notice.copilot.session_inactive")
 
     state = load_state(session.conversation_json)
     final_idea = build_generation_idea(session.original_idea, state)
     if not final_idea.strip():
-        return _redirect(f"/idea-copilot/{session_id}?error=Final+idea+is+empty")
+        return _redirect(f"/idea-copilot/{session_id}", error="notice.copilot.final_idea_empty")
 
     job = _create_generation_job(db, user.id, session.provider, final_idea)
     session.status = "confirmed"
@@ -1112,7 +1379,7 @@ def idea_copilot_cancel(session_id: int, request: Request, db: Session = Depends
         session.status = "canceled"
         session.finished_at = datetime.now(timezone.utc)
         db.commit()
-    return _redirect("/dashboard?message=Idea+copilot+session+canceled")
+    return _redirect("/dashboard", message="notice.copilot.canceled")
 
 
 @app.post("/jobs")
@@ -1131,14 +1398,14 @@ def create_job(
     provider_specs = _provider_specs_for_user(db, user.id)
 
     if not idea:
-        return _redirect("/dashboard?error=Idea+cannot+be+empty")
+        return _redirect("/dashboard", error="notice.idea.empty")
     if provider not in provider_specs:
-        return _redirect("/dashboard?error=Unsupported+provider")
+        return _redirect("/dashboard", error="notice.provider.unsupported")
 
     try:
         _provider_api_key(db, user.id, provider)
-    except ValueError:
-        return _redirect("/dashboard?error=Save+your+API+key+for+that+provider+first")
+    except ValueError as exc:
+        return _redirect("/dashboard", error=str(exc))
 
     job = _create_generation_job(db, user.id, provider, idea)
     _start_generation_worker(job.id)
@@ -1187,7 +1454,7 @@ def delete_job(job_id: int, request: Request, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
 
     if job.status in {"queued", "running"}:
-        return _redirect("/dashboard?error=Cannot+delete+a+queued/running+job.+Cancel+it+first")
+        return _redirect("/dashboard", error="notice.job.delete_running")
 
     run_id = (job.run_id or "").strip()
     run_dir = _resolve_run_dir(run_id) if run_id else None
@@ -1202,7 +1469,7 @@ def delete_job(job_id: int, request: Request, db: Session = Depends(get_db)):
         except Exception:
             pass
 
-    return _redirect("/dashboard?message=Job+deleted+permanently")
+    return _redirect("/dashboard", message="notice.job.deleted")
 
 
 @app.get("/jobs/{job_id}")
@@ -1210,6 +1477,7 @@ def job_detail(job_id: int, request: Request, db: Session = Depends(get_db)):
     user = _current_user(request, db)
     if not user:
         return _redirect("/login")
+    locale = get_locale(request)
 
     job = db.get(GenerationJob, job_id)
     if not job or job.user_id != user.id:
@@ -1231,9 +1499,9 @@ def job_detail(job_id: int, request: Request, db: Session = Depends(get_db)):
         progress_log_text = _tail_text(run_dir / "progress.log")
         chapter_outputs = _load_chapter_outputs(run_dir)
     try:
-        progress_snapshot = _build_progress_snapshot(job, run_dir, worker_log_text, progress_log_text)
+        progress_snapshot = _build_progress_snapshot(job, run_dir, worker_log_text, progress_log_text, locale)
     except Exception:
-        progress_snapshot = _default_progress_snapshot()
+        progress_snapshot = _default_progress_snapshot(locale)
 
     return templates.TemplateResponse(
         "job_detail.html",
@@ -1255,6 +1523,7 @@ def job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
     user = _current_user(request, db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unauthorized")
+    locale = get_locale(request)
 
     job = db.get(GenerationJob, job_id)
     if not job or job.user_id != user.id:
@@ -1268,9 +1537,9 @@ def job_logs(job_id: int, request: Request, db: Session = Depends(get_db)):
         worker_log_text = _tail_text(run_dir / "worker.log")
         progress_log_text = _tail_text(run_dir / "progress.log")
     try:
-        progress_snapshot = _build_progress_snapshot(job, run_dir, worker_log_text, progress_log_text)
+        progress_snapshot = _build_progress_snapshot(job, run_dir, worker_log_text, progress_log_text, locale)
     except Exception:
-        progress_snapshot = _default_progress_snapshot()
+        progress_snapshot = _default_progress_snapshot(locale)
 
     return JSONResponse(
         {

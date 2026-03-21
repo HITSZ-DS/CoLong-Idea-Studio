@@ -64,12 +64,28 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
 }
 
 .brand {
   font-size: 1.15rem;
   font-weight: 800;
   color: var(--ink);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lang-form {
+  margin: 0;
+}
+
+.lang-select {
+  min-width: 96px;
+  padding-right: 34px;
 }
 
 .user-menu {
@@ -393,6 +409,18 @@ th {
   display: none !important;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .chat-bubble {
   border-radius: 12px;
   padding: 12px;
@@ -413,5 +441,16 @@ th {
 @media (max-width: 900px) {
   .grid.two-col {
     grid-template-columns: 1fr;
+  }
+
+  .topbar-inner,
+  .topbar-actions,
+  .user-menu {
+    flex-wrap: wrap;
+  }
+
+  .topbar-actions {
+    justify-content: flex-end;
+    width: 100%;
   }
 }
