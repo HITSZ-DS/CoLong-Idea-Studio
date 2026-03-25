@@ -198,7 +198,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python main.py
+python main_cli.py
 ```
 
 </details>
@@ -270,7 +270,8 @@ vector_db/memory/run_<run_id>/memory_index.json
 |-- local_web_portal/      # 本地多用户 FastAPI 门户
 |-- docs/                  # 图示、截图和项目素材
 |-- config.py              # 配置中心
-`-- main.py                # CLI 入口
+|-- main_cli.py            # CLI 纯终端运行入口
+`-- main.py                # 桌面端启动器与管理界面入口
 ```
 
 </details>
@@ -293,6 +294,10 @@ vector_db/memory/run_<run_id>/memory_index.json
 - 🖼️ 项目展示页: [xiao-zi-chen.github.io/CoLong-Idea-Studio](https://xiao-zi-chen.github.io/CoLong-Idea-Studio/)
 - 🌐 本地门户启动说明: [RUN_LOCAL_WEB.md](RUN_LOCAL_WEB.md)
 - ⚖️ 许可证: [MIT](LICENSE)
+
+## 致谢 👏
+
+特别感谢 **sirvffg冷月笙寒** 对本项目的贡献。
 
 ## Star 增长趋势 📈
 

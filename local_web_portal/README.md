@@ -31,6 +31,8 @@ python -m pip install -r local_web_portal\requirements.txt
 
 ## 2) Configure
 
+This step is optional for local startup.
+
 ```powershell
 Copy-Item local_web_portal\.env.example local_web_portal\.env
 ```
@@ -61,6 +63,8 @@ Open:
 ```text
 http://127.0.0.1:8010
 ```
+
+The landing page includes a visual setup wizard at `/setup` (preflight checks + copy/paste setup commands).
 
 If your generation job fails with `torch/torchvision` import errors, your base project environment has a deep learning dependency mismatch.
 The web UI still works, but generation needs your original project dependencies fixed first.

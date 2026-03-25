@@ -13,3 +13,4 @@ tmp_memory_smoke/
 
 .venv/
 venv/
+start/build/

@@ -153,7 +153,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
-python main.py
+python main_cli.py
 ```
 
 </details>
@@ -225,7 +225,8 @@ Representative `progress.log` events:
 |-- local_web_portal/      # local multi-user FastAPI portal
 |-- docs/                  # diagrams, screenshots, and project-page assets
 |-- config.py              # configuration center
-`-- main.py                # CLI entry
+|-- main_cli.py            # CLI entry
+`-- main.py                # Desktop Launcher and Management UI entry
 ```
 
 </details>
@@ -252,6 +253,10 @@ See [DEPLOY_WHITELIST.md](DEPLOY_WHITELIST.md) and [RUN_LOCAL_WEB.md](RUN_LOCAL_
 ## License
 
 This project is released under the [MIT License](LICENSE).
+
+## Acknowledgements 👏
+
+Special thanks to **sirvffg冷月笙寒** for their contributions to this project.
 
 ## Citation
 
