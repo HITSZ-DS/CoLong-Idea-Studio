@@ -17,10 +17,15 @@
   </p>
 
   <p>
+    <b>🌐 在线体验入口：</b><a href="https://colong-idea-studio.cloud/">colong-idea-studio.cloud</a>
+  </p>
+
+  <p>
     <b>🚀 立即本地启动：</b> <code>.\START_LOCAL.bat</code>
   </p>
 
   <p>
+    <a href="https://colong-idea-studio.cloud/"><img src="https://img.shields.io/badge/在线平台-立即体验-0f766e?style=flat-square&logo=googlechrome&logoColor=white" alt="在线平台"></a>
     <a href="README.md"><img src="https://img.shields.io/badge/English-README-ef4444?style=flat-square" alt="English README"></a>
     <a href="RUN_LOCAL_WEB.md"><img src="https://img.shields.io/badge/本地运行-启动说明-f59e0b?style=flat-square&logo=readthedocs&logoColor=white" alt="本地运行指南"></a>
     <a href="DEPLOYMENT.md"><img src="https://img.shields.io/badge/部署-服务器说明-0f766e?style=flat-square" alt="部署文档"></a>
@@ -45,6 +50,9 @@
 
 > 🚀 **本地预览**
 > 👀 从 **`http://127.0.0.1:8010/select-mode`** 进入后，可继续前往 **`http://127.0.0.1:8012/dashboard`**，这才是主要的 NovelClaw 工作区。
+
+> 🌐 **在线体验**
+> 直接访问 **[colong-idea-studio.cloud](https://colong-idea-studio.cloud/)**，这是最快体验线上平台的方式。
 
 ## 概览 🌟
 
