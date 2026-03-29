@@ -120,7 +120,12 @@ class CompositiveExecutor:
         return str(getattr(self, "lang", "en")).lower().startswith("en")
 
     def _normalize_target_length(self, target_length: Any, default: int = 5000) -> int:
-        """Normalize free-form target-length input into a safe integer."""
+        """Normalize target-length input into a safe integer.
+
+        Rule:
+        - If an explicit numeric value can be parsed, use it.
+        - Otherwise, fall back directly to the default length.
+        """
         if isinstance(target_length, (int, float)):
             return max(1, int(target_length))
 
@@ -139,14 +144,6 @@ class CompositiveExecutor:
                 return max(1, int(digit_match.group(1)))
             except Exception:
                 pass
-
-        lower = raw.lower()
-        if any(token in raw for token in ["长篇", "长文", "超长"]) or "long-form" in lower or "epic" in lower:
-            return 20000
-        if any(token in raw for token in ["中篇", "中长"]) or "medium" in lower:
-            return 10000
-        if any(token in raw for token in ["短篇", "短文"]) or "short" in lower:
-            return 3000
 
         return default
 
