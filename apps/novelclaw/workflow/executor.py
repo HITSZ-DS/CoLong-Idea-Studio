@@ -119,6 +119,37 @@ class CompositiveExecutor:
     def _is_en(self) -> bool:
         return str(getattr(self, "lang", "en")).lower().startswith("en")
 
+    def _normalize_target_length(self, target_length: Any, default: int = 5000) -> int:
+        """Normalize free-form target-length input into a safe integer."""
+        if isinstance(target_length, (int, float)):
+            return max(1, int(target_length))
+
+        raw = str(target_length or "").strip()
+        if not raw:
+            return default
+
+        try:
+            return max(1, int(raw))
+        except Exception:
+            pass
+
+        digit_match = re.search(r"(\d{3,7})", raw)
+        if digit_match:
+            try:
+                return max(1, int(digit_match.group(1)))
+            except Exception:
+                pass
+
+        lower = raw.lower()
+        if any(token in raw for token in ["长篇", "长文", "超长"]) or "long-form" in lower or "epic" in lower:
+            return 20000
+        if any(token in raw for token in ["中篇", "中长"]) or "medium" in lower:
+            return 10000
+        if any(token in raw for token in ["短篇", "短文"]) or "short" in lower:
+            return 3000
+
+        return default
+
     def _prompt(self, zh: str, en: str) -> str:
         """Return prompt text based on current language selection."""
         return en if self._is_en() else zh
@@ -371,6 +402,7 @@ You are writing segment {idx+1}/{seg_count} of a long English story. Continue th
             print(self._prompt(f"  - 类型: {genre}", f"  - Genre: {genre}"))
             print(self._prompt(f"  - 风格: {', '.join(style_tags)}", f"  - Style: {', '.join(style_tags)}"))
             print(self._prompt(f"  - 主题: {topic}", f"  - Topic: {topic}"))
+            target_length = self._normalize_target_length(target_length, default=5000)
             print(self._prompt(f"  - 目标长度: {target_length}字", f"  - Target length: {target_length} words"))
         else:
             # 如果没有自动分析，使用默认值
@@ -384,6 +416,8 @@ You are writing segment {idx+1}/{seg_count} of a long English story. Continue th
                 genre = "general"
             if not style_tags:
                 style_tags = ["delicate"] if self._is_en() else ["细腻"]
+
+        target_length = self._normalize_target_length(target_length, default=5000)
 
         self._remember_project_claw_context(
             idea=idea,
@@ -400,7 +434,7 @@ You are writing segment {idx+1}/{seg_count} of a long English story. Continue th
         
         # 2. 任务分析 / Claw 自举
         if self._claw_mode():
-            complexity = "high" if int(target_length or 0) >= 20000 else ("medium" if int(target_length or 0) >= 8000 else "focused")
+            complexity = "high" if target_length >= 20000 else ("medium" if target_length >= 8000 else "focused")
             task_analysis = {
                 "complexity": complexity,
                 "target_length": target_length,
